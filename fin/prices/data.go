@@ -25,6 +25,17 @@ type PriceVol struct {
 	Vol   float64
 }
 
+func (p *Positions)Copy()map[float64]float64{
+	p.lock.RLock()
+	defer p.lock.RUnlock()
+
+	to := make(map[float64]float64)
+	for price, vol := range p.position{
+		to[price] = vol
+	}
+	return to
+}
+
 func (p *Positions) GetAllUnordered() []PriceVol {
 	p.lock.RLock()
 	defer p.lock.RUnlock()
