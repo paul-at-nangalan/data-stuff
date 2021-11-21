@@ -11,7 +11,7 @@ type Positions struct {
 	/////map price to volume
 	lock      sync.RWMutex
 	position  map[float64]float64
-	timestamp uint64
+	Timestamp uint64 //should be safe to expose on 64bit systems
 	///so we can report any positions that have been removed to who ever is using this class
 	removed []float64
 }
@@ -93,7 +93,7 @@ func (p *Positions) Update(pos []interface{}) {
 		}
 		ts, err := strconv.ParseUint(pos[i+2].(string), 10, 64)
 		handlers.PanicOnError(err)
-		p.timestamp = ts
+		p.Timestamp = ts
 	}
 }
 
