@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strconv"
 	"sync"
+	"time"
 )
 
 const(
@@ -101,6 +102,19 @@ func (p *Positions) Fill(pos map[string]interface{}) {
 	}
 }
 
+
+func (p *Positions) FillStrFloat(pos map[string]float64) {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	p.position = make(map[float64]float64)
+	p.updated = make(map[float64]float64)
+	for pricestr, vol := range pos {
+		price := toFloat(pricestr)
+		//fmt.Println("Adding vol for ", price, vol)
+		p.position[price] = vol
+	}
+}
+
 func (p *Positions) Update(pos []interface{}) {
 	p.lock.Lock()
 	defer p.lock.Unlock()
@@ -120,8 +134,27 @@ func (p *Positions) Update(pos []interface{}) {
 	}
 }
 
+func (p *Positions) UpdateStrFloat(pos map[string]float64) {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	for price, vol := range pos{
+		price := toFloat(price)
+		if vol > 0 {
+			p.position[price] = vol
+			p.updated[price] = vol
+		} else {
+			delete(p.position, price)
+			p.removed = append(p.removed, price)
+		}
+		t := time.Now()
+		p.Timestamp = uint64(t.Unix() * int64(time.Microsecond)) + uint64(t.UnixNano()/1000)
+	}
+}
+
 func toFloat(str string)float64{
 	fl, err := strconv.ParseFloat(str, 64)
 	handlers.PanicOnError(err)
 	return fl
 }
+
+

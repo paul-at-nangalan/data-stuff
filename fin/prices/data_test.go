@@ -90,3 +90,69 @@ func Test_FillAndUpdate(t *testing.T){
 	filled = positions.GetAllUnordered()
 	cmp(expectedfinal, filled, t, "final")
 }
+
+
+func cmpStrFloat(exp map[string]float64, posdata []PriceVol, t *testing.T){
+
+	for pricestr, vol := range exp{
+		expprice := toFloat(pricestr)
+		found := false
+		gotvol := float64(0)
+		for _, got := range posdata{
+			if got.Price == expprice{
+				found = true
+				gotvol = got.Vol
+				break
+			}
+		}
+		if !found{
+			t.Error("Failed to find price ", expprice)
+		}
+		if gotvol != vol{
+			t.Error("Vol mismatch at price ", expprice, gotvol, vol)
+		}
+	}
+}
+func Test_FillAndUpdateByStrFloat(t *testing.T){
+	filldata := map[string]float64{
+		"233.4566": 2330.56,
+		"103.432": 998778,
+		"6722.0921": 55429.3324,
+	}
+	pos := NewPositions()
+	pos.FillStrFloat(filldata)
+	posdata := pos.GetAllUnordered()
+	cmpStrFloat(filldata, posdata, t)
+	upddata := pos.GetUpdatesUnordered()
+	if len(upddata) > 0{
+		t.Error("Got update data after a fill")
+	}
+
+	update := map[string]float64{
+		"103.432": 0,
+		"6722.0921": 55429.7762,
+		"6801.95": 42021,
+	}
+	///update the fill data map to the new expected
+	for price, vol := range update {
+		if vol != 0{
+			filldata[price] = vol
+		}else {
+			delete(filldata, price)
+		}
+	}
+	pos.UpdateStrFloat(update)
+	upddata = pos.GetUpdatesUnordered()
+	cmpStrFloat(update, upddata, t)
+	////check update data is now empty
+	upddata = pos.GetUpdatesUnordered()
+	if len(upddata) > 0{
+		t.Error("Updates still set after get")
+	}
+
+	///check the overall mapping is correct
+	posdata = pos.GetAllUnordered()
+	cmpStrFloat(filldata, posdata, t)
+
+
+}
