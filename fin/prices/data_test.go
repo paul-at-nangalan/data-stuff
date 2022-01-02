@@ -93,6 +93,11 @@ func Test_FillAndUpdate(t *testing.T){
 
 
 func cmpStrFloat(exp map[string]float64, posdata []PriceVol, t *testing.T){
+	if len(exp) != len(posdata){
+		t.Error("Len mismatch on filled data",
+			exp,
+			posdata)
+	}
 
 	for pricestr, vol := range exp{
 		expprice := toFloat(pricestr)
